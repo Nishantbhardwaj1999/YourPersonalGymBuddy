@@ -1,0 +1,7 @@
+User (Web UI) ↔ Next.js (Frontend) ↔ Go API (Backend) ↔ LLM Service (Optional)
+                                             ↕
+                                      PostgreSQL / MongoDB
+                                             ↕
+                                      Azure Blob Storage (for images)
+                                             ↕
+                                       AKS (Managed by Terraform)

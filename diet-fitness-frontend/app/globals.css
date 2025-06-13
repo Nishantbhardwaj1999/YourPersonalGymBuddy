@@ -1,0 +1,32 @@
+/* --- diet-fitness-frontend/app/globals.css --- */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* Custom Cursor - a small red dot */
+body {
+  /* Using a transparent PNG of a small red dot. You'd need to create this image
+     and place it in your `public` folder, e.g., `public/red-dot-cursor.png`.
+     For simplicity, we'll use a generic pointer or an external example.
+     Let's use a subtle default cursor for now and rely on hover states.
+     If you really want a custom image:
+     cursor: url('/red-dot-cursor.png') 8 8, auto; (8 8 is hotspot x y)
+  */
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="%23D32F2F" stroke="white" stroke-width="1"/></svg>') 5 5, auto;
+  /* The SVG above creates a small red circle with a white border.
+     The `5 5` are the hotspot coordinates (center of the 10x10 SVG). */
+  
+  padding: 0;
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out; /* Smooth transition for theme change */
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
