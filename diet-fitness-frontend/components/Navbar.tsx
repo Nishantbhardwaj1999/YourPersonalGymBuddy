@@ -3,26 +3,33 @@
 
 import { AppBar, Toolbar, Typography, Button, Box, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import Brightness4Icon from '@mui/icons-material/Brightness4'; // Icon for dark mode
-import Brightness7Icon from '@mui/icons-material/Brightness7'; // Icon for light mode
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useThemeMode } from '../contexts/ThemeModeContext'; // Import theme mode context
+import { useThemeMode } from '../contexts/ThemeModeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useRouter } from 'next/navigation'; // Corrected: using next/navigation for App Router
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { mode, toggleColorMode } = useThemeMode(); // Use the theme mode context
-  const theme = useTheme(); // Use MUI's useTheme hook to access the current theme object
+  const { mode, toggleColorMode } = useThemeMode();
+  const { user, logout } = useAuth();
+  const theme = useTheme();
+  const router = useRouter(); // Use useRouter from next/navigation
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  const handleLogout = () => {
+    logout(); // AuthContext handles redirect to login
+  };
+
   const navItems = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Upload', href: '/upload' },
-    { name: 'My Plan', href: '/plan' },
-    { name: 'Login', href: '/login' },
+    { name: 'Dashboard', href: '/dashboard', authRequired: true },
+    { name: 'Upload', href: '/upload', authRequired: true },
+    { name: 'My Plan', href: '/plan', authRequired: true },
   ];
 
   const drawer = (
@@ -32,13 +39,28 @@ export default function Navbar() {
       </Typography>
       <List>
         {navItems.map((item) => (
-          <ListItem key={item.name} disablePadding>
-            <ListItemButton component={Link} href={item.href} sx={{ textAlign: 'center' }}>
-              <ListItemText primary={item.name} />
+          // Only show authenticated items if user is logged in
+          (item.authRequired && user) || !item.authRequired ? (
+            <ListItem key={item.name} disablePadding>
+              <ListItemButton component={Link} href={item.href} sx={{ textAlign: 'center' }}>
+                <ListItemText primary={item.name} />
+              </ListItemButton>
+            </ListItem>
+          ) : null
+        ))}
+        {user ? (
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleLogout} sx={{ textAlign: 'center' }}>
+              <ListItemText primary="Logout" />
             </ListItemButton>
           </ListItem>
-        ))}
-        {/* Theme toggle in drawer */}
+        ) : (
+          <ListItem disablePadding>
+            <ListItemButton component={Link} href="/login" sx={{ textAlign: 'center' }}>
+              <ListItemText primary="Login" />
+            </ListItemButton>
+          </ListItem>
+        )}
         <ListItem disablePadding>
           <ListItemButton onClick={toggleColorMode} sx={{ textAlign: 'center' }}>
             <ListItemText primary={mode === 'dark' ? 'Switch to Light' : 'Switch to Dark'} />
@@ -59,11 +81,18 @@ export default function Navbar() {
         </Typography>
         <Box sx={{ display: { xs: 'none', md: 'block' } }}>
           {navItems.map((item) => (
-            <Button key={item.name} color="inherit" component={Link} href={item.href}>
-              {item.name}
-            </Button>
+            // Only show authenticated items if user is logged in
+            (item.authRequired && user) || !item.authRequired ? (
+              <Button key={item.name} color="inherit" component={Link} href={item.href}>
+                {item.name}
+              </Button>
+            ) : null
           ))}
-          {/* Theme toggle button for desktop */}
+          {user ? ( // Display user email on logout button if available
+            <Button color="inherit" onClick={handleLogout}>Logout ({user.email})</Button>
+          ) : (
+            <Button color="inherit" component={Link} href="/login">Login</Button>
+          )}
           <IconButton sx={{ ml: 1 }} onClick={toggleColorMode} color="inherit">
             {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
@@ -84,7 +113,7 @@ export default function Navbar() {
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
+            keepMounted: true,
           }}
           sx={{
             display: { xs: 'block', md: 'none' },

@@ -1,30 +1,42 @@
 // --- diet-fitness-frontend/app/layout.tsx ---
-// IMPORTANT: NO 'use client' directive here! This is a Server Component.
+// IMPORTANT: NO 'use client' here! This is a Server Component by design.
 
 import type { Metadata } from 'next';
-import AppProviders from './providers'; // Import your client-side providers
-import './globals.css'; // Import global CSS
+import { Montserrat } from 'next/font/google';
+import './globals.css';
 
-// Static metadata export - this runs on the server to populate the <head>
+// AuthProvider and ThemeModeProvider
+import { AuthProvider } from '../contexts/AuthContext';
+import { ThemeModeProvider } from '../contexts/ThemeModeContext';
+
+// Import the new client component that handles ThemeProvider and Navbar
+import ThemeAndNavWrapper from '../components/ThemeAndNavWrapper';
+
+const montserrat = Montserrat({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'FitPlan AI - Your AI Fitness Companion', // Specific and descriptive title
+  title: 'FitPlan AI - Your AI Fitness Companion',
   description: 'Achieve your fitness and diet goals with personalized plans powered by AI.',
-  // You can add other static head elements like favicons if needed:
-  // icons: {
-  //   icon: '/favicon.ico', // assuming you have a favicon.ico in your public folder
-  // },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// The RootLayout component remains a Server Component
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // AppProviders now handles the <html> and <body> tags,
-    // and provides the Material-UI context.
-    <AppProviders>
-      {children}
-    </AppProviders>
+    <html lang="en" className={montserrat.className}>
+      <body>
+        <ThemeModeProvider> {/* This provides the theme mode context */}
+          <AuthProvider> {/* This provides the authentication context */}
+            {/* ThemeAndNavWrapper is a client component that wraps children with MUI ThemeProvider and renders the Navbar */}
+            <ThemeAndNavWrapper>
+              {children}
+            </ThemeAndNavWrapper>
+          </AuthProvider>
+        </ThemeModeProvider>
+      </body>
+    </html>
   );
 }

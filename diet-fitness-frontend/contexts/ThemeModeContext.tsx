@@ -1,54 +1,49 @@
 // --- diet-fitness-frontend/contexts/ThemeModeContext.tsx ---
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { PaletteMode } from '@mui/material';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+type ThemeMode = 'light' | 'dark';
 
 interface ThemeModeContextType {
-  mode: PaletteMode;
+  mode: ThemeMode;
   toggleColorMode: () => void;
 }
 
 const ThemeModeContext = createContext<ThemeModeContextType | undefined>(undefined);
 
-export function ThemeModeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<PaletteMode>('light'); // Default to light
-
-  // Effect to load saved theme preference from localStorage on mount
-  useEffect(() => {
-    const savedMode = localStorage.getItem('themeMode') as PaletteMode;
-    if (savedMode) {
-      setMode(savedMode);
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      // Check for user's system preference if no saved mode
-      setMode('dark');
+export const ThemeModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Initialize mode from localStorage or default to 'light'
+  const [mode, setMode] = useState<ThemeMode>(() => {
+    if (typeof window !== 'undefined') { // Check if running in browser
+      const storedMode = localStorage.getItem('themeMode');
+      return (storedMode as ThemeMode) || 'light';
     }
+    return 'light'; // Default for server-side render or if no localStorage
+  });
+
+  // Persist mode to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('themeMode', mode);
+    }
+  }, [mode]);
+
+  const toggleColorMode = React.useCallback(() => {
+    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
   }, []);
 
-  const toggleColorMode = useMemo(
-    () => () => {
-      setMode((prevMode) => {
-        const newMode = prevMode === 'light' ? 'dark' : 'light';
-        localStorage.setItem('themeMode', newMode); // Save preference
-        return newMode;
-      });
-    },
-    [],
-  );
-
-  const value = useMemo(() => ({ mode, toggleColorMode }), [mode, toggleColorMode]);
-
   return (
-    <ThemeModeContext.Provider value={value}>
+    <ThemeModeContext.Provider value={{ mode, toggleColorMode }}>
       {children}
     </ThemeModeContext.Provider>
   );
-}
+};
 
-export function useThemeMode() {
+export const useThemeMode = () => {
   const context = useContext(ThemeModeContext);
   if (context === undefined) {
     throw new Error('useThemeMode must be used within a ThemeModeProvider');
   }
   return context;
-}
+};

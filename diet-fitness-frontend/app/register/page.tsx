@@ -1,4 +1,4 @@
-// --- diet-fitness-frontend/app/login/page.tsx ---
+// --- diet-fitness-frontend/app/register/page.tsx ---
 'use client';
 
 import React, { useState } from 'react';
@@ -6,6 +6,7 @@ import { Container, TextField, Button, Typography, Box, Paper, CircularProgress 
 import { styled, useTheme } from '@mui/material/styles';
 import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRouter } from 'next/navigation'; // Corrected: using next/navigation for App Router
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -18,25 +19,42 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   width: '100%',
 }));
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth(); // Destructure login function from AuthContext
+  const { register } = useAuth(); // Destructure register function from AuthContext
+  const router = useRouter(); // Use useRouter from next/navigation for manual redirects
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
-    console.log('Login Page: Submitting login form...');
-    const result = await login(email, password); // Call login from AuthContext
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
 
-    if (!result.success) {
+    console.log('Register Page: Submitting registration form...');
+    const result = await register(email, password); // Call register from AuthContext
+
+    if (result.success) {
+      setSuccessMessage(result.message);
+      console.log('Register Page: Registration successful, redirecting to /login...');
+      // Redirect to login page after a short delay for user to see success message
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    } else {
       setError(result.message);
-      console.error('Login Page: Login failed:', result.message);
+      console.error('Register Page: Registration failed:', result.message);
     }
     setLoading(false);
   };
@@ -55,12 +73,17 @@ export default function LoginPage() {
     >
       <StyledPaper>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          Welcome Back!
+          Register
         </Typography>
         <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: theme.spacing(3) }}>
           {error && (
             <Typography color="error" variant="body2" sx={{ textAlign: 'center' }}>
               {error}
+            </Typography>
+          )}
+          {successMessage && (
+            <Typography color="primary" variant="body2" sx={{ textAlign: 'center' }}>
+              {successMessage}
             </Typography>
           )}
           <TextField
@@ -79,10 +102,21 @@ export default function LoginPage() {
             type="password"
             fullWidth
             variant="outlined"
-            autoComplete="current-password"
+            autoComplete="new-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+          />
+          <TextField
+            label="Confirm Password"
+            type="password"
+            fullWidth
+            variant="outlined"
+            autoComplete="new-password"
+            required
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={loading}
           />
           <Button
@@ -94,16 +128,13 @@ export default function LoginPage() {
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Registering...' : 'Register'}
           </Button>
         </form>
-        <Button variant="text" color="primary" component={Link} href="#">
-          Forgot Password?
-        </Button>
         <Typography variant="body2" sx={{ mt: 2 }}>
-          Don't have an account?{' '}
-          <Link href="/register" style={{ textDecoration: 'none', color: theme.palette.primary.main }}>
-            Sign Up
+          Already have an account?{' '}
+          <Link href="/login" style={{ textDecoration: 'none', color: theme.palette.primary.main }}>
+            Login here
           </Link>
         </Typography>
       </StyledPaper>
